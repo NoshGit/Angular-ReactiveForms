@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 
 import { Customer } from './customer';
+import { emailMatcher, ratingRange } from './customer.validator';
 
 @Component({
   selector: 'app-customer',
@@ -16,10 +17,16 @@ export class CustomerComponent implements OnInit {
 
   ngOnInit(): void {
     this.customerForm = this.fb.group({
-      firstName: '',
-      lastName: '',
-      email: '',
-      sendCatalog: true
+      firstName: ['', [Validators.required, Validators.minLength(3)]],
+      lastName: ['', [Validators.required, Validators.maxLength(50)]],
+      emailGroup: this.fb.group({
+        email: ['', Validators.required],
+        confirmEmail: ['', Validators.required]
+      }, {validator: emailMatcher}),
+      phone:'',
+      notification:'email',
+      sendCatalog: true,
+      rating:['', ratingRange(1,5)]
     });
   }
 
@@ -32,12 +39,24 @@ export class CustomerComponent implements OnInit {
     }); */
 
     this.customerForm.patchValue({
-      email: 'noshirpatchemail@gmail.com'
+      emailGroup: {email:'noshirpatchemail@gmail.com'}
     })
   } 
 
   save(): void {
     console.log(this.customerForm);
     console.log('Saved: ' + JSON.stringify(this.customerForm.value));
+  }
+
+  setNotifyMe(notify: string) : void {
+    var phoneCtrl = this.customerForm.get('phone');
+
+    if(notify === 'text'){
+      phoneCtrl?.setValidators(Validators.required);
+    }else{
+      phoneCtrl?.clearValidators();
+    }
+
+    phoneCtrl?.updateValueAndValidity();
   }
 }
